@@ -1,59 +1,101 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🖥️ SMILK: Sistem Manajemen Inventaris Lab Komputer
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistem ini dirancang khusus untuk membantu pengelolaan barang di Laboratorium Komputer dengan cara yang visual dan efisien. Menggunakan **Laravel** dan **Filament**, sistem ini memungkinkan pengelolaan kategori barang, detail barang (termasuk upload gambar), serta log perawatan barang.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🛠️ Persiapan Awal
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+Pastikan Anda sudah berada di dalam direktori proyek ini dan sudah menjalankan:
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer install
+cp .env.example .env
+php artisan key:generate
+touch database/database.sqlite
+php artisan migrate
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+---
 
-## Contributing
+## 🚀 Langkah-Langkah Pengerjaan
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 1. Membuat Struktur Database & Model (15 Menit)
 
-## Code of Conduct
+Tahap awal adalah menyiapkan fondasi data menggunakan Migration dan Model.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+- **Jalankan Perintah:**
+    ```bash
+    php artisan make:model Kategori -m
+    php artisan make:model Barang -m
+    php artisan make:model LogPerawatan -m
+    ```
+- **Konfigurasi Migrasi:**
+    - **Kategoris:** Tambahkan `$table->string('nama_kategori');`
+    - **Barangs:** Tambahkan relasi ke kategori, kode barang, nama, kondisi (enum), dan gambar.
+    - **LogPerawatans:** Tambahkan relasi ke barang, tanggal, dan catatan.
+- **Set Relasi di Model:**
+    - Gunakan `protected $guarded = [];` untuk mempermudah _mass assignment_.
+    - Hubungkan `Barang` ke `Kategori` (_BelongsTo_) dan `Kategori` ke `Barang` (_HasMany_).
 
-## Security Vulnerabilities
+### 2. "The Filament Magic" - Generate Resources (10 Menit)
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Membuat antarmuka admin secara instan tanpa perlu membuat Controller atau View manual.
 
-## License
+- **Jalankan Perintah:**
+    ```bash
+    php artisan make:filament-resource Kategori
+    php artisan make:filament-resource Barang
+    php artisan make:filament-resource LogPerawatan
+    ```
+- **Cek Hasilnya:** Buka browser dan refresh halaman admin Anda (biasanya di `/admin`). Tiga menu baru akan muncul di sidebar!
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-# SMILK-Starter
+### 3. Konfigurasi `KategoriResource` (10 Menit)
+
+Konfigurasi dasar untuk memahami bagaimana `Form` dan `Table` bekerja di Filament.
+
+- **Form:** Tambahkan `TextInput` untuk `nama_kategori` dengan validasi `required()`.
+- **Table:** Tambahkan `TextColumn` untuk menampilkan `nama_kategori`.
+
+### 4. Konfigurasi `BarangResource` - Fitur Utama (25 Menit)
+
+Memanfaatkan fitur canggih Filament seperti upload gambar dan relasi dropdown.
+
+- **Form:**
+    - `TextInput` untuk kode dan nama barang.
+    - `Select` untuk relasi kategori (menggunakan `relationship`).
+    - `Select` untuk kondisi barang (Baik/Rusak).
+    - `FileUpload` untuk mengunggah gambar barang.
+- **Table:**
+    - Tampilkan semua kolom.
+    - Gunakan `ImageColumn` agar foto barang langsung terlihat.
+    - Tambahkan **Badge** warna pada kolom kondisi (Hijau untuk Baik, Merah untuk Rusak).
+    - **Filter:** Tambahkan filter untuk mempermudah pencarian barang yang rusak saja.
+
+### 5. Konfigurasi `LogPerawatanResource` (15 Menit)
+
+Mengelola riwayat perawatan barang dengan input yang lebih variatif.
+
+- **Form:**
+    - `Select` untuk memilih barang yang dirawat.
+    - `DatePicker` untuk mencatat tanggal perawatan (default: hari ini).
+    - `RichEditor` untuk menulis catatan perawatan yang detail (format tebal, list, dll).
+
+### 6. Dashboard Widget - Penutup (15 Menit)
+
+Membuat dashboard admin terlihat lebih profesional dengan ringkasan data.
+
+- **Jalankan Perintah:**
+    ```bash
+    php artisan make:filament-widget StatsOverview --type=stats-overview
+    ```
+- **Isi Widget:** Tampilkan statistik total Kategori, total Barang, dan jumlah Barang yang sedang Rusak.
+
+---
+
+## 📝 Catatan Penting
+
+- Gunakan **SQLite** untuk kemudahan setup database.
+- Jangan lupa menjalankan `php artisan storage:link` jika fitur upload gambar tidak muncul.
+
+Selamat berkarya! 🚀
